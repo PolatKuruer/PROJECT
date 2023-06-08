@@ -1,0 +1,93 @@
+/* JoyStick modulu verici kodu
+ - BAGLANTILAR: nRF24L01 Modulu:
+   1 - GND
+   2 - VCC 3.3V !!! 5V DEGIL
+   3 - CE Arduino pin 9
+   4 - CSN Arduino pin 10
+   5 - SCK Arduino pin 13
+   6 - MOSI Arduino pin 11
+   7 - MISO Arduino pin 12
+   8 - KULLANILMIYOR
+   
+   Default Buton Pinleri: 
+   Yukari     - pin 2
+   Sag  - pin 3
+   Asagi   - pin 4
+   Sol   - pin 5
+   - 
+   Analog Joystick modulu
+   GND    Arduino GND
+   VCC    Arduino +5V
+   X      Arduino A0
+   Y      Arduino A1
+/*-----( Kutuphaneleri ekliyoruz )-----*/
+
+#include <SPI.h>
+#include "nRF24L01.h"
+#include "RF24.h"
+
+#define CE_PIN   9
+#define CSN_PIN 10
+#define xAxis 14     // A0 Arduino UNO
+#define yAxis 15     // A1 Arduino UNO
+
+//const uint64_t pipe = 0xE8E8F0F0E1LL; // Pipe tanimliyoruz
+
+/*-----( Nesneleri tanitiyoruz )-----*/
+RF24 radio(CE_PIN, CSN_PIN); // Radio yaratiyoruz
+
+/*-----( Degiskenleri belirtiyoruz )-----*/
+int joystick[6];  // Joystick'in ve 4 adet butonun okunmasini tutan 6lı element dizisi
+
+int buttonUp    = 2;
+int buttonRight = 3;
+int buttonDown  = 4;
+int buttonLeft  = 5;
+
+
+void setup() {
+
+  Serial.begin(9600);
+  radio.begin();
+  radio.openWritingPipe(pipe);
+  radio.stopListening();
+  
+  //Butun butonlar ve baslangic hali icin pinMode'u belirtiyoruz
+  pinMode(buttonUp,INPUT_PULLUP);
+  pinMode(buttonRight,INPUT_PULLUP);
+  pinMode(buttonDown,INPUT_PULLUP);
+  pinMode(buttonLeft,INPUT_PULLUP);
+  
+  digitalWrite(buttonUp,LOW);
+  digitalWrite(buttonRight,LOW);
+  digitalWrite(buttonDown,LOW);
+  digitalWrite(buttonLeft,LOW);
+
+}
+
+void loop() {
+  
+  joystick[0] = analogRead(xAxis);
+  joystick[1] = analogRead(yAxis);
+  joystick[2] = digitalRead(buttonUp);
+  joystick[3] = digitalRead(buttonRight);
+  joystick[4] = digitalRead(buttonDown);
+  joystick[5] = digitalRead(buttonLeft);
+  
+  radio.write( joystick, sizeof(joystick) );
+  delay(20);
+
+      Serial.print("X = ");
+      Serial.print(analogRead(xAxis));
+      Serial.print(" Y = ");  
+      Serial.print(analogRead(yAxis));
+      Serial.print(" Up = "); 
+      Serial.print(digitalRead(buttonUp));
+      Serial.print(" Right = "); 
+      Serial.print(digitalRead(buttonRight));
+      Serial.print(" Down = "); 
+      Serial.print(digitalRead(buttonDown));
+      Serial.print(" Left = "); 
+      Serial.println(digitalRead(buttonLeft));
+
+}
